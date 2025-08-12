@@ -24,12 +24,18 @@ app.use(
           'https://cdn.tailwindcss.com',
           'https://cdn.jsdelivr.net'
         ],
-        styleSrc: [
+        scriptSrcElem: [
           "'self'",
           'https://cdn.tailwindcss.com',
           'https://cdn.jsdelivr.net'
         ],
-        imgSrc: ["'self'", 'data:']
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          'https://cdn.tailwindcss.com',
+          'https://cdn.jsdelivr.net'
+        ],
+        imgSrc: ["'self'", 'data:', 'https://images.unsplash.com']
       }
     }
   })
