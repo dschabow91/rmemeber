@@ -1,6 +1,6 @@
 # Motherlode Pass-Over App
 
-Simple shift pass-over web application using Node.js, Express, lowdb and a single-page HTML frontend.
+Simple shift pass-over web application using Node.js, Express, lowdb and a small React frontend.
 
 ## Development
 
