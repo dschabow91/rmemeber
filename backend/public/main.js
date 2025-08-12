@@ -4,9 +4,11 @@ import ReactDOM from 'https://esm.sh/react-dom@18/client'
 function Login({ onLoggedIn }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
 
   async function submit(e) {
     e.preventDefault()
+    setError('')
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -16,13 +18,18 @@ function Login({ onLoggedIn }) {
     if (res.ok) {
       const { user } = await res.json()
       onLoggedIn(user)
+    } else {
+      const data = await res.json().catch(() => ({}))
+      setError(data.error || 'Login failed')
     }
   }
 
   return (
-    <form onSubmit={submit} className="card space-y-4 max-w-sm mx-auto mt-10">
-      <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" className="border p-2 w-full" required />
-      <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" className="border p-2 w-full" required />
+    <form onSubmit={submit} className="card space-y-4 mt-10 text-center">
+      <img src="https://images.unsplash.com/photo-1581091012184-5c43e0d0b637?auto=format&fit=crop&w=600&q=80" alt="factory" className="w-full h-32 object-cover rounded" />
+      {error && <div className="text-red-600 text-sm">{error}</div>}
+      <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@motherlode.local" className="border p-2 w-full" required />
+      <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="ChangeMe123!" className="border p-2 w-full" required />
       <button className="btn btn-primary w-full">Login</button>
     </form>
   )
@@ -45,7 +52,7 @@ function ChangePassword() {
   }
 
   return (
-    <form onSubmit={submit} className="card space-y-2 max-w-sm">
+    <form onSubmit={submit} className="card space-y-2 max-w-sm mx-auto">
       <input type="password" value={oldPw} onChange={e => setOldPw(e.target.value)} placeholder="Old password" className="border p-2 w-full" required />
       <input type="password" value={newPw} onChange={e => setNewPw(e.target.value)} placeholder="New password" className="border p-2 w-full" required />
       <button className="btn btn-primary">Update</button>
@@ -152,7 +159,7 @@ function Dashboard({ user, onLogout }) {
   const [showPw, setShowPw] = useState(false)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-2xl mx-auto w-full">
       <div className="card flex justify-between items-center">
         <h2 className="text-lg font-semibold">Welcome {user.name}</h2>
         <div className="space-x-2">
