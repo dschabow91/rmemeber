@@ -7,69 +7,83 @@
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
   <title>Shift Pass-Over</title>
 </head>
-<body class="p-4">
-<div x-show="!user">
-  <h1 class="text-xl mb-2">Login</h1>
-  <form @submit.prevent="login">
-    <input x-model="email" type="email" placeholder="Email" class="border p-1" required />
-    <input x-model="password" type="password" placeholder="Password" class="border p-1" required />
-    <button class="bg-blue-500 text-white px-2">Login</button>
-  </form>
-</div>
-
-<div x-show="user">
-  <div class="mb-4 flex justify-between">
-    <h1 class="text-xl">Welcome <span x-text="user.name"></span></h1>
-    <button @click="logout" class="text-red-500">Logout</button>
+<body class="bg-gray-100 p-4">
+<div class="max-w-3xl mx-auto" x-cloak>
+  <!-- Login -->
+  <div x-show="!user" class="bg-white shadow rounded p-6 space-y-4">
+    <h1 class="text-2xl font-bold text-center">Motherlode Pass-Over</h1>
+    <form class="space-y-3" @submit.prevent="login">
+      <input x-model="email" type="email" placeholder="Email" class="border p-2 w-full" required />
+      <input x-model="password" type="password" placeholder="Password" class="border p-2 w-full" required />
+      <button class="w-full bg-blue-600 text-white py-2 rounded">Login</button>
+    </form>
   </div>
 
-  <h2 class="text-lg">New Entry</h2>
-  <form @submit.prevent="createEntry" class="space-y-2">
-    <div>
-      <label>Date <input type="date" x-model="entry.date" required class="border" /></label>
-      <label>Shift
-        <select x-model="entry.shift" class="border" required>
-          <option value="AM">AM</option>
-          <option value="PM">PM</option>
-        </select>
-      </label>
-      <label>Line
-        <select x-model="entry.line" class="border" required>
-          <option value="1">1</option>
-          <option value="2">2</option>
-        </select>
-      </label>
-    </div>
-    <div>
-      <textarea x-model="entry.completedTasks" placeholder="Completed tasks" class="border w-full"></textarea>
-    </div>
-    <div>
-      <textarea x-model="entry.issues" placeholder="Issues" class="border w-full"></textarea>
-    </div>
-    <div>
-      <textarea x-model="entry.nextActions" placeholder="Next actions" class="border w-full"></textarea>
-    </div>
-    <div>
-      <label>Downtime <input type="number" x-model="entry.downtime" class="border w-20" /></label>
-      <label>Shortages <input type="text" x-model="entry.shortages" class="border" /></label>
-      <label>Sanitation <input type="text" x-model="entry.sanitation" class="border" /></label>
-    </div>
-    <div>
-      <input type="file" multiple x-ref="files" />
-    </div>
-    <button class="bg-green-500 text-white px-2">Save</button>
-  </form>
-
-  <h2 class="text-lg mt-6">Recent Entries</h2>
-  <div>
-    <template x-for="e in entries" :key="e.id">
-      <div class="border p-2 my-2">
-        <div><b x-text="e.date"></b> - <span x-text="e.shift"></span> - Line <span x-text="e.line"></span></div>
-        <div x-text="e.completedTasks"></div>
-        <div x-text="e.issues"></div>
-        <div x-text="e.nextActions"></div>
+  <!-- App -->
+  <div x-show="user" class="space-y-6">
+    <div class="bg-white shadow rounded p-4 flex justify-between items-center">
+      <h1 class="text-xl font-semibold">Welcome <span x-text="user.name"></span></h1>
+      <div class="space-x-2">
+        <button @click="showPw = !showPw" class="text-sm text-blue-600">Change Password</button>
+        <button @click="logout" class="text-sm text-red-600">Logout</button>
       </div>
-    </template>
+    </div>
+
+    <div x-show="showPw" class="bg-white shadow rounded p-4">
+      <form @submit.prevent="changePassword" class="space-y-2">
+        <input type="password" placeholder="Old password" x-model="oldPassword" class="border p-2 w-full" required />
+        <input type="password" placeholder="New password" x-model="newPassword" class="border p-2 w-full" required />
+        <button class="bg-blue-600 text-white px-3 py-1 rounded">Update</button>
+      </form>
+    </div>
+
+    <div class="bg-white shadow rounded p-4">
+      <h2 class="text-lg font-semibold mb-2">New Entry</h2>
+      <form @submit.prevent="createEntry" class="space-y-3">
+        <div class="flex flex-wrap gap-2">
+          <label>Date <input type="date" x-model="entry.date" required class="border p-1"></label>
+          <label>Shift
+            <select x-model="entry.shift" class="border p-1" required>
+              <option value="AM">AM</option>
+              <option value="PM">PM</option>
+            </select>
+          </label>
+          <label>Line
+            <select x-model="entry.line" class="border p-1" required>
+              <option value="1">1</option>
+              <option value="2">2</option>
+            </select>
+          </label>
+        </div>
+        <textarea x-model="entry.completedTasks" placeholder="Completed tasks" class="border w-full p-1"></textarea>
+        <textarea x-model="entry.issues" placeholder="Issues" class="border w-full p-1"></textarea>
+        <textarea x-model="entry.nextActions" placeholder="Next actions" class="border w-full p-1"></textarea>
+        <div>
+          <input type="file" multiple x-ref="files" />
+        </div>
+        <button class="bg-green-600 text-white px-3 py-1 rounded">Save</button>
+      </form>
+    </div>
+
+    <div class="bg-white shadow rounded p-4">
+      <div class="flex justify-between items-center mb-2">
+        <h2 class="text-lg font-semibold">Entries</h2>
+        <input type="date" x-model="filterDate" @change="loadEntries" class="border p-1" />
+      </div>
+      <div>
+        <template x-for="e in entries" :key="e.id">
+          <div class="border p-2 my-2 rounded bg-gray-50">
+            <div class="flex justify-between">
+              <div><b x-text="e.date"></b> - <span x-text="e.shift"></span> - Line <span x-text="e.line"></span></div>
+              <a :href="`/api/entries/export?date=${e.date}&line=${e.line}`" class="text-sm text-blue-600">Export</a>
+            </div>
+            <div class="mt-1" x-text="e.completedTasks"></div>
+            <div class="mt-1" x-text="e.issues"></div>
+            <div class="mt-1" x-text="e.nextActions"></div>
+          </div>
+        </template>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -79,18 +93,38 @@ function app() {
     user: null,
     email: '',
     password: '',
+    oldPassword: '',
+    newPassword: '',
+    showPw: false,
     entries: [],
-    entry: { date: '', shift: 'AM', line: '1', completedTasks: '', issues: '', nextActions: '', downtime: 0, shortages: '', sanitation: '' },
+    filterDate: '',
+    entry: { date: '', shift: 'AM', line: '1', completedTasks: '', issues: '', nextActions: '' },
     async init() {
-      const res = await fetch('/api/auth/me').then(r => r.ok ? r.json() : null)
+      const res = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.ok ? r.json() : null)
       if (res && res.user) { this.user = res.user; this.loadEntries() }
     },
     async login() {
-      const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: this.email, password: this.password }) })
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: this.email, password: this.password })
+      })
       if (res.ok) { this.user = (await res.json()).user; this.loadEntries() }
     },
     async logout() {
-      await fetch('/api/auth/logout', { method: 'POST' }); this.user = null
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      this.user = null
+    },
+    async changePassword() {
+      await fetch('/api/users/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ oldPassword: this.oldPassword, newPassword: this.newPassword })
+      })
+      this.showPw = false
+      this.oldPassword = this.newPassword = ''
     },
     async createEntry() {
       const files = this.$refs.files.files
@@ -98,17 +132,24 @@ function app() {
       if (files.length) {
         const fd = new FormData()
         for (const f of files) fd.append('files', f)
-        const up = await fetch('/api/upload', { method: 'POST', body: fd })
+        const up = await fetch('/api/upload', { method: 'POST', body: fd, credentials: 'include' })
         if (up.ok) attachments = (await up.json()).files
       }
       const payload = { ...this.entry, attachments }
-      await fetch('/api/entries', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-      this.entry = { date: '', shift: 'AM', line: '1', completedTasks: '', issues: '', nextActions: '', downtime: 0, shortages: '', sanitation: '' }
+      await fetch('/api/entries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      })
+      this.entry = { date: '', shift: 'AM', line: '1', completedTasks: '', issues: '', nextActions: '' }
       this.$refs.files.value = null
       this.loadEntries()
     },
     async loadEntries() {
-      const res = await fetch('/api/entries')
+      const params = new URLSearchParams()
+      if (this.filterDate) params.append('date', this.filterDate)
+      const res = await fetch('/api/entries?' + params.toString(), { credentials: 'include' })
       if (res.ok) this.entries = await res.json()
     }
   }

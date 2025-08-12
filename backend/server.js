@@ -4,7 +4,7 @@ import helmet from 'helmet'
 import cors from 'cors'
 import multer from 'multer'
 import { join } from 'path'
-import { existsSync, mkdirSync } from 'fs'
+import { existsSync, mkdirSync, writeFileSync } from 'fs'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { initDb, db } from './db.js'
@@ -24,6 +24,11 @@ const uploadsDir = process.env.UPLOADS_DIR || join(process.cwd(), 'uploads')
 if (!existsSync(uploadsDir)) mkdirSync(uploadsDir, { recursive: true })
 const upload = multer({ dest: uploadsDir })
 app.use('/uploads', express.static(uploadsDir))
+
+// directory for exported entries
+const dataDir = process.env.DATA_DIR || join(process.cwd(), 'data')
+const entriesDir = join(dataDir, 'entries')
+if (!existsSync(entriesDir)) mkdirSync(entriesDir, { recursive: true })
 
 app.use(express.static(join(process.cwd(), 'public')))
 
@@ -48,6 +53,12 @@ function adminOnly(req, res, next) {
   next()
 }
 
+function saveEntryFile(entry) {
+  const fileName = `Motherlode_${entry.date}_Line${entry.line}.json`
+  const filePath = join(entriesDir, fileName)
+  writeFileSync(filePath, JSON.stringify(entry, null, 2))
+}
+
 // seed admin
 if (!db.data.users.find(u => u.email === 'admin@motherlode.local')) {
   const id = Date.now().toString()
@@ -65,7 +76,7 @@ app.post('/api/auth/login', async (req, res) => {
   const user = db.data.users.find(u => u.email === email)
   if (!user || !bcrypt.compareSync(password, user.password)) return res.status(401).json({ error: 'Invalid credentials' })
   const token = createToken(user)
-  res.cookie('token', token, { httpOnly: true, sameSite: 'lax' })
+  res.cookie('token', token, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' })
   res.json({ user: { id: user.id, name: user.name, role: user.role } })
 })
 
@@ -113,10 +124,15 @@ app.post('/api/upload', authRequired, upload.array('files'), (req, res) => {
 })
 
 app.post('/api/entries', authRequired, async (req, res) => {
-  const entry = { ...req.body, id: Date.now().toString(), createdBy: req.user.id, attachments: req.body.attachments || [] }
+  const { date, line, shift, completedTasks = '', issues = '', nextActions = '', attachments = [] } = req.body
   await db.read()
+  if (db.data.entries.find(e => e.date === date && e.line === line)) {
+    return res.status(400).json({ error: 'Entry already exists for this date and line' })
+  }
+  const entry = { id: Date.now().toString(), createdBy: req.user.id, date, line, shift, completedTasks, issues, nextActions, attachments }
   db.data.entries.push(entry)
   await db.write()
+  saveEntryFile(entry)
   res.status(201).json(entry)
 })
 
@@ -129,6 +145,17 @@ app.get('/api/entries', authRequired, async (req, res) => {
   if (line) entries = entries.filter(e => e.line === line)
   entries = entries.slice(-Number(limit)).reverse()
   res.json(entries)
+})
+
+app.get('/api/entries/export', authRequired, async (req, res) => {
+  const { date, line } = req.query
+  if (!date || !line) return res.status(400).json({ error: 'date and line required' })
+  await db.read()
+  const entry = db.data.entries.find(e => e.date === date && e.line === line)
+  if (!entry) return res.status(404).json({ error: 'Not found' })
+  const fileName = `Motherlode_${date}_Line${line}.json`
+  res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`)
+  res.send(JSON.stringify(entry, null, 2))
 })
 
 app.get('/api/entries/:id', authRequired, async (req, res) => {
