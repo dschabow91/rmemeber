@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" x-data="app()" x-init="init()">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <title>Shift Pass-Over</title>
+</head>
+<body class="p-4">
+<div x-show="!user">
+  <h1 class="text-xl mb-2">Login</h1>
+  <form @submit.prevent="login">
+    <input x-model="email" type="email" placeholder="Email" class="border p-1" required />
+    <input x-model="password" type="password" placeholder="Password" class="border p-1" required />
+    <button class="bg-blue-500 text-white px-2">Login</button>
+  </form>
+</div>
+
+<div x-show="user">
+  <div class="mb-4 flex justify-between">
+    <h1 class="text-xl">Welcome <span x-text="user.name"></span></h1>
+    <button @click="logout" class="text-red-500">Logout</button>
+  </div>
+
+  <h2 class="text-lg">New Entry</h2>
+  <form @submit.prevent="createEntry" class="space-y-2">
+    <div>
+      <label>Date <input type="date" x-model="entry.date" required class="border" /></label>
+      <label>Shift
+        <select x-model="entry.shift" class="border" required>
+          <option value="AM">AM</option>
+          <option value="PM">PM</option>
+        </select>
+      </label>
+      <label>Line
+        <select x-model="entry.line" class="border" required>
+          <option value="1">1</option>
+          <option value="2">2</option>
+        </select>
+      </label>
+    </div>
+    <div>
+      <textarea x-model="entry.completedTasks" placeholder="Completed tasks" class="border w-full"></textarea>
+    </div>
+    <div>
+      <textarea x-model="entry.issues" placeholder="Issues" class="border w-full"></textarea>
+    </div>
+    <div>
+      <textarea x-model="entry.nextActions" placeholder="Next actions" class="border w-full"></textarea>
+    </div>
+    <div>
+      <label>Downtime <input type="number" x-model="entry.downtime" class="border w-20" /></label>
+      <label>Shortages <input type="text" x-model="entry.shortages" class="border" /></label>
+      <label>Sanitation <input type="text" x-model="entry.sanitation" class="border" /></label>
+    </div>
+    <div>
+      <input type="file" multiple x-ref="files" />
+    </div>
+    <button class="bg-green-500 text-white px-2">Save</button>
+  </form>
+
+  <h2 class="text-lg mt-6">Recent Entries</h2>
+  <div>
+    <template x-for="e in entries" :key="e.id">
+      <div class="border p-2 my-2">
+        <div><b x-text="e.date"></b> - <span x-text="e.shift"></span> - Line <span x-text="e.line"></span></div>
+        <div x-text="e.completedTasks"></div>
+        <div x-text="e.issues"></div>
+        <div x-text="e.nextActions"></div>
+      </div>
+    </template>
+  </div>
+</div>
+
+<script>
+function app() {
+  return {
+    user: null,
+    email: '',
+    password: '',
+    entries: [],
+    entry: { date: '', shift: 'AM', line: '1', completedTasks: '', issues: '', nextActions: '', downtime: 0, shortages: '', sanitation: '' },
+    async init() {
+      const res = await fetch('/api/auth/me').then(r => r.ok ? r.json() : null)
+      if (res && res.user) { this.user = res.user; this.loadEntries() }
+    },
+    async login() {
+      const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: this.email, password: this.password }) })
+      if (res.ok) { this.user = (await res.json()).user; this.loadEntries() }
+    },
+    async logout() {
+      await fetch('/api/auth/logout', { method: 'POST' }); this.user = null
+    },
+    async createEntry() {
+      const files = this.$refs.files.files
+      let attachments = []
+      if (files.length) {
+        const fd = new FormData()
+        for (const f of files) fd.append('files', f)
+        const up = await fetch('/api/upload', { method: 'POST', body: fd })
+        if (up.ok) attachments = (await up.json()).files
+      }
+      const payload = { ...this.entry, attachments }
+      await fetch('/api/entries', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      this.entry = { date: '', shift: 'AM', line: '1', completedTasks: '', issues: '', nextActions: '', downtime: 0, shortages: '', sanitation: '' }
+      this.$refs.files.value = null
+      this.loadEntries()
+    },
+    async loadEntries() {
+      const res = await fetch('/api/entries')
+      if (res.ok) this.entries = await res.json()
+    }
+  }
+}
+</script>
+</body>
+</html>
