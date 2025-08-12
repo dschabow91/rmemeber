@@ -1,0 +1,41 @@
+body {
+  background-color: #f3f4f6;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+}
+
+.card {
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  color: #ffffff;
+}
+
+.btn-primary {
+  background-color: #0ea5e9;
+}
+.btn-primary:hover {
+  background-color: #0284c7;
+}
+
+.btn-secondary {
+  background-color: #16a34a;
+}
+.btn-secondary:hover {
+  background-color: #15803d;
+}
+
+.link {
+  color: #0ea5e9;
+  font-size: 0.875rem;
+}
+.link:hover {
+  text-decoration: underline;
+}

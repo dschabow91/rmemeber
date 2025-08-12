@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: motherlode-passover
+    env: node
+    plan: free
+    region: oregon
+    rootDir: backend
+    runtime: node
+    nodeVersion: 22
+    autoDeploy: true
+    buildCommand: |
+      npm install
+    startCommand: |
+      node server.js
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ORIGIN
+        value: https://motherlode-passover.onrender.com
+      - key: DATA_DIR
+        value: /opt/render/project/src/backend/data
+      - key: UPLOADS_DIR
+        value: /opt/render/project/src/backend/uploads
+    disk:
+      name: persistent-data
+      mountPath: /opt/render/project/src/backend
+      sizeGB: 1
+    healthCheckPath: /api/health

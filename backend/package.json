@@ -1,0 +1,21 @@
+{
+  "name": "motherlode-passover-backend",
+  "version": "1.0.0",
+  "description": "Shift Pass-Over Web App backend",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"No tests specified\""
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "helmet": "^7.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "lowdb": "^6.0.1",
+    "multer": "^2.0.0-rc.1"
+  }
+}
