@@ -7,7 +7,7 @@ import { join } from 'path'
 import { existsSync, mkdirSync } from 'fs'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import db from './db.js'
+import { initDb, db } from './db.js'
 
 const app = express()
 const PORT = process.env.PORT || 10000
@@ -26,6 +26,8 @@ const upload = multer({ dest: uploadsDir })
 app.use('/uploads', express.static(uploadsDir))
 
 app.use(express.static(join(process.cwd(), 'public')))
+
+await initDb()
 
 // helpers
 function createToken(user) {
@@ -47,7 +49,6 @@ function adminOnly(req, res, next) {
 }
 
 // seed admin
-await db.read()
 if (!db.data.users.find(u => u.email === 'admin@motherlode.local')) {
   const id = Date.now().toString()
   const password = bcrypt.hashSync('ChangeMe123!', 10)
