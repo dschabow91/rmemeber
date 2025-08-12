@@ -5,13 +5,13 @@ function app() {
     password: '',
     oldPassword: '',
     newPassword: '',
-    showPw: false,
+    view: 'new',
     entries: [],
     filterDate: '',
     entry: { date: '', shift: 'AM', line: '1', completedTasks: '', issues: '', nextActions: '' },
     async init() {
       const res = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.ok ? r.json() : null)
-      if (res && res.user) { this.user = res.user; this.loadEntries() }
+      if (res && res.user) { this.user = res.user; this.view = 'new'; this.loadEntries() }
     },
     async login() {
       const res = await fetch('/api/auth/login', {
@@ -20,11 +20,12 @@ function app() {
         credentials: 'include',
         body: JSON.stringify({ email: this.email, password: this.password })
       })
-      if (res.ok) { this.user = (await res.json()).user; this.loadEntries() }
+      if (res.ok) { this.user = (await res.json()).user; this.view = 'new'; this.loadEntries() }
     },
     async logout() {
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
       this.user = null
+      this.view = 'new'
     },
     async changePassword() {
       await fetch('/api/users/change-password', {
@@ -33,7 +34,6 @@ function app() {
         credentials: 'include',
         body: JSON.stringify({ oldPassword: this.oldPassword, newPassword: this.newPassword })
       })
-      this.showPw = false
       this.oldPassword = this.newPassword = ''
     },
     async createEntry() {
@@ -61,6 +61,10 @@ function app() {
       if (this.filterDate) params.append('date', this.filterDate)
       const res = await fetch('/api/entries?' + params.toString(), { credentials: 'include' })
       if (res.ok) this.entries = await res.json()
+    },
+    setView(v) {
+      this.view = v
+      if (v === 'list') this.loadEntries()
     }
   }
 }

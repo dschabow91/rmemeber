@@ -9,85 +9,95 @@
   <script src="/app.js" defer></script>
   <title>Shift Pass-Over</title>
 </head>
-<body class="p-4">
-<div class="max-w-3xl mx-auto" x-cloak>
-  <!-- Login -->
-  <div x-show="!user" class="card space-y-4">
-    <h1 class="text-2xl font-bold text-center">Motherlode Pass-Over</h1>
-    <form class="space-y-3" @submit.prevent="login">
-      <input x-model="email" type="email" placeholder="Email" class="border p-2 w-full" required />
-      <input x-model="password" type="password" placeholder="Password" class="border p-2 w-full" required />
-      <button class="btn btn-primary w-full">Login</button>
-    </form>
+<body class="min-h-screen">
+  <!-- Login Screen -->
+  <div x-show="!user" x-cloak class="flex items-center justify-center min-h-screen">
+    <div class="card w-full max-w-sm">
+      <h1 class="text-2xl font-bold text-center mb-4">Motherlode Pass-Over</h1>
+      <form class="space-y-3" @submit.prevent="login">
+        <input x-model="email" type="email" placeholder="Email" class="border p-2 w-full" required />
+        <input x-model="password" type="password" placeholder="Password" class="border p-2 w-full" required />
+        <button class="btn btn-primary w-full">Login</button>
+      </form>
+    </div>
   </div>
 
   <!-- App -->
-  <div x-show="user" class="space-y-6">
-    <div class="card flex justify-between items-center">
-      <h1 class="text-xl font-semibold">Welcome <span x-text="user.name"></span></h1>
-      <div class="space-x-2">
-        <button @click="showPw = !showPw" class="link">Change Password</button>
-        <button @click="logout" class="link text-red-600">Logout</button>
-      </div>
-    </div>
-
-    <div x-show="showPw" class="card">
-      <form @submit.prevent="changePassword" class="space-y-2">
-        <input type="password" placeholder="Old password" x-model="oldPassword" class="border p-2 w-full" required />
-        <input type="password" placeholder="New password" x-model="newPassword" class="border p-2 w-full" required />
-        <button class="btn btn-primary">Update</button>
-      </form>
-    </div>
-
-    <div class="card">
-      <h2 class="text-lg font-semibold mb-2">New Entry</h2>
-      <form @submit.prevent="createEntry" class="space-y-3">
-        <div class="flex flex-wrap gap-2">
-          <label>Date <input type="date" x-model="entry.date" required class="border p-1"></label>
-          <label>Shift
-            <select x-model="entry.shift" class="border p-1" required>
-              <option value="AM">AM</option>
-              <option value="PM">PM</option>
-            </select>
-          </label>
-          <label>Line
-            <select x-model="entry.line" class="border p-1" required>
-              <option value="1">1</option>
-              <option value="2">2</option>
-            </select>
-          </label>
-        </div>
-        <textarea x-model="entry.completedTasks" placeholder="Completed tasks" class="border w-full p-1"></textarea>
-        <textarea x-model="entry.issues" placeholder="Issues" class="border w-full p-1"></textarea>
-        <textarea x-model="entry.nextActions" placeholder="Next actions" class="border w-full p-1"></textarea>
-        <div>
-          <input type="file" multiple x-ref="files" />
-        </div>
-        <button class="btn btn-secondary">Save</button>
-      </form>
-    </div>
-
-    <div class="card">
-      <div class="flex justify-between items-center mb-2">
-        <h2 class="text-lg font-semibold">Entries</h2>
-        <input type="date" x-model="filterDate" @change="loadEntries" class="border p-1" />
-      </div>
-      <div>
-        <template x-for="e in entries" :key="e.id">
-          <div class="border p-2 my-2 rounded bg-gray-50">
-            <div class="flex justify-between">
-              <div><b x-text="e.date"></b> - <span x-text="e.shift"></span> - Line <span x-text="e.line"></span></div>
-              <a :href="`/api/entries/export?date=${e.date}&line=${e.line}`" class="link">Export</a>
+  <div x-show="user" x-cloak class="flex flex-col min-h-screen">
+    <header class="header p-4 flex justify-between items-center">
+      <h1 class="text-xl font-semibold">Motherlode Pass-Over</h1>
+      <nav class="space-x-2">
+        <button class="nav-btn" :class="{'nav-active': view==='new'}" @click="setView('new')">New Entry</button>
+        <button class="nav-btn" :class="{'nav-active': view==='list'}" @click="setView('list')">Entries</button>
+        <button class="nav-btn" :class="{'nav-active': view==='account'}" @click="setView('account')">Account</button>
+        <button class="nav-btn" @click="logout">Logout</button>
+      </nav>
+    </header>
+    <main class="p-4 flex-1">
+      <template x-if="view==='new'">
+        <div class="max-w-3xl mx-auto card">
+          <h2 class="text-lg font-semibold mb-2">New Entry</h2>
+          <form @submit.prevent="createEntry" class="space-y-3">
+            <div class="flex flex-wrap gap-2">
+              <label>Date <input type="date" x-model="entry.date" required class="border p-1"></label>
+              <label>Shift
+                <select x-model="entry.shift" class="border p-1" required>
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                </select>
+              </label>
+              <label>Line
+                <select x-model="entry.line" class="border p-1" required>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                </select>
+              </label>
             </div>
-            <div class="mt-1" x-text="e.completedTasks"></div>
-            <div class="mt-1" x-text="e.issues"></div>
-            <div class="mt-1" x-text="e.nextActions"></div>
+            <textarea x-model="entry.completedTasks" placeholder="Completed tasks" class="border w-full p-1"></textarea>
+            <textarea x-model="entry.issues" placeholder="Issues" class="border w-full p-1"></textarea>
+            <textarea x-model="entry.nextActions" placeholder="Next actions" class="border w-full p-1"></textarea>
+            <div>
+              <input type="file" multiple x-ref="files" />
+            </div>
+            <button class="btn btn-secondary">Save</button>
+          </form>
+        </div>
+      </template>
+
+      <template x-if="view==='list'">
+        <div class="max-w-3xl mx-auto card">
+          <div class="flex justify-between items-center mb-2">
+            <h2 class="text-lg font-semibold">Entries</h2>
+            <input type="date" x-model="filterDate" @change="loadEntries" class="border p-1" />
           </div>
-        </template>
-      </div>
-    </div>
+          <div>
+            <template x-for="e in entries" :key="e.id">
+              <div class="border p-2 my-2 rounded bg-gray-50">
+                <div class="flex justify-between">
+                  <div><b x-text="e.date"></b> - <span x-text="e.shift"></span> - Line <span x-text="e.line"></span></div>
+                  <a :href="`/api/entries/export?date=${e.date}&line=${e.line}`" class="link">Export</a>
+                </div>
+                <div class="mt-1" x-text="e.completedTasks"></div>
+                <div class="mt-1" x-text="e.issues"></div>
+                <div class="mt-1" x-text="e.nextActions"></div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+
+      <template x-if="view==='account'">
+        <div class="max-w-md mx-auto card">
+          <h2 class="text-lg font-semibold mb-2">Change Password</h2>
+          <form @submit.prevent="changePassword" class="space-y-2">
+            <input type="password" placeholder="Old password" x-model="oldPassword" class="border p-2 w-full" required />
+            <input type="password" placeholder="New password" x-model="newPassword" class="border p-2 w-full" required />
+            <button class="btn btn-primary">Update</button>
+          </form>
+        </div>
+      </template>
+    </main>
   </div>
-</div>
 
 </body>
 </html>
