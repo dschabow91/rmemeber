@@ -14,7 +14,26 @@ const PORT = process.env.PORT || 10000
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret'
 const ORIGIN = process.env.ORIGIN || 'http://localhost:10000'
 
-app.use(helmet())
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          'https://cdn.tailwindcss.com',
+          'https://cdn.jsdelivr.net'
+        ],
+        styleSrc: [
+          "'self'",
+          'https://cdn.tailwindcss.com',
+          'https://cdn.jsdelivr.net'
+        ],
+        imgSrc: ["'self'", 'data:']
+      }
+    }
+  })
+)
 app.use(express.json())
 app.use(cookieParser())
 app.use(cors({ origin: ORIGIN, credentials: true }))
